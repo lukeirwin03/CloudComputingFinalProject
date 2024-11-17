@@ -1,8 +1,11 @@
 from flask import Flask, jsonify, request
 import boto3
 from botocore.exceptions import ClientError
+from flask_cors import CORS 
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+
 dynamodb = boto3.resource('dynamodb')
 
 users_table = dynamodb.Table('Users')
