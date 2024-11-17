@@ -56,8 +56,8 @@ Resources:
           ToPort: 3000
           CidrIp: 0.0.0.0/0  # HTTP access for frontend
         - IpProtocol: tcp
-          FromPort: 8000
-          ToPort: 8000
+          FromPort: 5000
+          ToPort: 5000
           CidrIp: 0.0.0.0/0  # HTTP access for backend
 
   # EC2 Instance
