@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t2.micro
+  KeyName:
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Description: Name of an existing EC2 key pair for SSH access
+  ImageId:
+    Type: 'AWS::EC2::Image::Id'
+    Default: ami-067d1e60475437da2 # Replace with your region's suitable AMI
+
+Resources:
+  # DynamoDB Table for Users
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Users
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # DynamoDB Table for Posts
+  PostsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Posts
+      AttributeDefinitions:
+        - AttributeName: postId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: postId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # EC2 Security Group
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP and SSH access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  # EC2 Instance
+  SingleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref ImageId
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref MySecurityGroup
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          # Update and install dependencies
+          yum update -y
+          yum install -y python3 git nodejs
+
+          # Clone the project repository
+          git clone https://github.com/lukeirwin03/CloudComputingFinalProject.git /home/ec2-user/final_project
+
+          # Set up and start the backend
+          cd /home/ec2-user/final_project/backend
+          pip3 install -r requirements.txt
+          nohup python3 app.py > /home/ec2-user/backend.log 2>&1 &
+
+          # Set up and start the frontend
+          cd /home/ec2-user/final_project/frontend
+          npm install
+          nohup npm start > /home/ec2-user/frontend.log 2>&1 &
+
+Outputs:
+  EC2InstancePublicIP:
+    Description: Public IP of the EC2 instance
+    Value: !GetAtt SingleInstance.PublicIp
+  EC2InstanceURL:
+    Description: URL of the running application
+    Value: !Join ["", ["http://", !GetAtt SingleInstance.PublicDnsName]]
