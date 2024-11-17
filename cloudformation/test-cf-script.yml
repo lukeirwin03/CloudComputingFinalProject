@@ -8,10 +8,10 @@ Parameters:
     Description: Name of an existing EC2 key pair for SSH access
   ImageId:
     Type: 'AWS::EC2::Image::Id'
-    Default: ami-067d1e60475437da2 # Replace with your region's suitable AMI
+    Default: ami-0182f373e66f89c85 # Replace with your region's suitable AMI
 
 Resources:
-  # DynamoDB Table for Users
+  # DynamoDB Users Table
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -22,9 +22,11 @@ Resources:
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
-  # DynamoDB Table for Posts
+  # DynamoDB Posts Table
   PostsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -32,27 +34,31 @@ Resources:
       AttributeDefinitions:
         - AttributeName: postId
           AttributeType: S
-        - AttributeName: userId
-          AttributeType: S
       KeySchema:
         - AttributeName: postId
           KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
-  # EC2 Security Group
+  # Security Group
   MySecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTP and SSH access
+      GroupDescription: Enable SSH and HTTP access
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
+          CidrIp: 0.0.0.0/0  # SSH access from anywhere (adjust as needed)
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0  # HTTP access for frontend
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 0.0.0.0/0  # HTTP access for backend
 
   # EC2 Instance
   SingleInstance:
@@ -66,9 +72,8 @@ Resources:
       UserData:
         Fn::Base64: |
           #!/bin/bash
-          # Update and install dependencies
           yum update -y
-          yum install -y python3 git nodejs
+          yum install -y python3 git nodejs python-pip
 
           # Clone the project repository
           git clone https://github.com/lukeirwin03/CloudComputingFinalProject.git /home/ec2-user/final_project
@@ -79,14 +84,23 @@ Resources:
           nohup python3 app.py > /home/ec2-user/backend.log 2>&1 &
 
           # Set up and start the frontend
-          cd /home/ec2-user/final_project/frontend
+          cd /home/ec2-user/final_project/uno-forum
           npm install
           nohup npm start > /home/ec2-user/frontend.log 2>&1 &
 
 Outputs:
-  EC2InstancePublicIP:
-    Description: Public IP of the EC2 instance
-    Value: !GetAtt SingleInstance.PublicIp
-  EC2InstanceURL:
-    Description: URL of the running application
-    Value: !Join ["", ["http://", !GetAtt SingleInstance.PublicDnsName]]
+  EC2InstancePublicDNS:
+    Description: Public DNS of the EC2 instance
+    Value: !GetAtt SingleInstance.PublicDnsName
+  UsersTableName:
+    Description: DynamoDB Users Table Name
+    Value: !Ref UsersTable
+  PostsTableName:
+    Description: DynamoDB Posts Table Name
+    Value: !Ref PostsTable
+  FrontendURL:
+    Description: URL for the frontend application
+    Value: !Sub 'http://${SingleInstance.PublicDnsName}:3000'
+  BackendURL:
+    Description: URL for the backend API
+    Value: !Sub 'http://${SingleInstance.PublicDnsName}:8000'
