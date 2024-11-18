@@ -7,17 +7,20 @@ const App = () => {
   const [content, setContent] = useState('');
   const [posts, setPosts] = useState([]);
 
+  // Environment variable for API URL
+  const apiUrl = process.env.REACT_APP_AWS_URL || 'http://127.0.0.1:5000';
+  console.log(apiUrl)
   // Function to register user
   const registerUser = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1:5000/register', {
+      const response = await axios.post(`${apiUrl}/register`, {
         userId: email,
         name,
         email
       });
       alert(response.data.message);
     } catch (error) {
-      console.error('Error registering user:', error);
+      console.error('Error registering user:', error.response || error);
       alert('Failed to register user.');
     }
   };
@@ -25,14 +28,14 @@ const App = () => {
   // Function to create a new post
   const createPost = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1:5000/post', {
+      const response = await axios.post(`${apiUrl}/post`, {
         postId: Date.now().toString(),
         content
       });
       alert(response.data.message);
       getPosts();  // Reload posts after creating a new post
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error('Error creating post:', error.response || error);
       alert('Failed to create post.');
     }
   };
@@ -40,10 +43,10 @@ const App = () => {
   // Function to get all posts
   const getPosts = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:5000/posts');
+      const response = await axios.get(`${apiUrl}/posts`);
       setPosts(response.data);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error('Error fetching posts:', error.response || error);
       alert('Failed to fetch posts.');
     }
   };

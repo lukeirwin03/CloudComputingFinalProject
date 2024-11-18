@@ -4,6 +4,12 @@ from typing import List, Optional
 import boto3
 from botocore.exceptions import ClientError
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+frontend_origin = os.getenv("AWS_URL", "*")
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -11,7 +17,7 @@ app = FastAPI()
 # Enable CORS for all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  
+    allow_origins=[frontend_origin],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
