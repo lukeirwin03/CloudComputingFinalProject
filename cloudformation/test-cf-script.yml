@@ -106,7 +106,7 @@ Resources:
           # Set up environment variables
           cd ~/final_project
           chmod 705 install-scripts/set-env.sh
-          ./install-scripts/set-env.sh
+          sudo ./install-scripts/set-env.sh
 
           # Set up and start the backend
           cd /home/ec2-user/final_project/backend
