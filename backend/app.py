@@ -1,44 +1,65 @@
-from flask import Flask, jsonify, request
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional
 import boto3
 from botocore.exceptions import ClientError
-from flask_cors import CORS 
+from fastapi.middleware.cors import CORSMiddleware
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+# Initialize FastAPI app
+app = FastAPI()
 
-dynamodb = boto3.resource('dynamodb')
+# Enable CORS for all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# Set up DynamoDB
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 users_table = dynamodb.Table('Users')
 posts_table = dynamodb.Table('Posts')
 
+# Data models for request bodies
+class User(BaseModel):
+    userId: str
+class Post(BaseModel):
+    postId: str
+    content: str
+
 # Endpoint to register a user
-@app.route('/register', methods=['POST'])
-def register_user():
-    data = request.json  # extracts the data from the incoming request
+@app.post("/register")
+async def register_user(user: User):
     try:
-        users_table.put_item(Item=data)
-        return jsonify({'message': 'User registered successfully!'}), 201  # return a success message and success code
+        users_table.put_item(Item=user.dict())
+        return {"message": "User registered successfully!"}
     except ClientError as e:
-        return jsonify({'error': str(e)}), 500  # return an error and error code
-    
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Endpoint to create a new post
-@app.route('/post', methods=['POST'])
-def create_post():
-    data = request.json
+@app.post("/post")
+async def create_post(post: Post):
     try:
-        posts_table.put_item(Item=data)
-        return jsonify({'message': 'Post created successfully!'}), 201  # return a success message and success code
+        posts_table.put_item(Item=post.dict())
+        return {"message": "Post created successfully!"}
     except ClientError as e:
-        return jsonify({'error': str(e)}), 500  # return an error and error code
-    
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Endpoint to get all posts
-@app.route('/posts', methods=['GET'])
-def get_posts():
+@app.get("/posts", response_model=List[Post])
+async def get_posts():
     try:
         response = posts_table.scan()
-        return jsonify(response.get('Items', [])), 200  # Fixed syntax issue here
+        posts = response.get('Items', [])
+        if not posts:
+            print("No posts found in the database.")
+        return posts
     except ClientError as e:
-        return jsonify({'error': str(e)}), 500  # return an error and error code
+        print(f"Error fetching posts: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching posts from DynamoDB.")
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="localhost", port=5000)

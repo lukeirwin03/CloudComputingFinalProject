@@ -1,2 +1,4 @@
-flask
+fastapi
+pydantic
+uvicorn
 boto3
