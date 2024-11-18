@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const App = () => {
   const [name, setName] = useState('');
@@ -8,35 +9,45 @@ const App = () => {
 
   // Function to register user
   const registerUser = async () => {
-    const response = await fetch('http://localhost:5000/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: email, name, email })
-    });
-    const data = await response.json();
-    alert(data.message);
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/register', {
+        userId: email,
+        name,
+        email
+      });
+      alert(response.data.message);
+    } catch (error) {
+      console.error('Error registering user:', error);
+      alert('Failed to register user.');
+    }
   };
 
   // Function to create a new post
   const createPost = async () => {
-    const response = await fetch('http://localhost:5000/post', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postId: Date.now().toString(), content })
-    });
-    const data = await response.json();
-    alert(data.message);
-    getPosts();  // Reload posts after creating a new post
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/post', {
+        postId: Date.now().toString(),
+        content
+      });
+      alert(response.data.message);
+      getPosts();  // Reload posts after creating a new post
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post.');
+    }
   };
 
   // Function to get all posts
   const getPosts = async () => {
-    const response = await fetch('http://localhost:5000/posts');
-    const data = await response.json();
-    setPosts(data);
+    try {
+      const response = await axios.get('http://127.0.0.1:5000/posts');
+      setPosts(response.data);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      alert('Failed to fetch posts.');
+    }
   };
 
-  // Load posts when the component mounts
   useEffect(() => {
     getPosts();
   }, []);
