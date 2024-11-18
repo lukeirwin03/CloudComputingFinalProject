@@ -9,8 +9,9 @@ if [ -z "$IP" ]; then
   exit 1
 fi
 
-# format it for AWS
-FORMATTED_IP=$(echo "$IP" | sed 's/\./-/g')
+FORMATTED_IP=$IP
+# # format it for AWS
+# FORMATTED_IP=$(echo "$IP" | sed 's/\./-/g')
 
 # write the formatted IP to the .env file
 echo "AWS_URL=http://ec2-$FORMATTED_IP.compute-1.amazonaws.com:3000" > backend/.env
