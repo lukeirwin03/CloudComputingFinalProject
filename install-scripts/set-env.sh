@@ -16,5 +16,5 @@ FORMATTED_IP=$IP
 # write the formatted IP to the .env file
 # echo "AWS_URL=http://ec2-$FORMATTED_IP.compute-1.amazonaws.com:3000" > backend/.env
 # echo "REACT_APP_AWS_URL=http://ec2-$FORMATTED_IP.compute-1.amazonaws.com:5000" > uno-forum/.env
-echo "AWS_URL=http://ec2-$FORMATTED_IP:3000" > backend/.env
-echo "REACT_APP_AWS_URL=http://ec2-$FORMATTED_IP:5000" > uno-forum/.env
+echo "AWS_URL=http://$FORMATTED_IP:3000" > backend/.env
+echo "REACT_APP_AWS_URL=http://$FORMATTED_IP:5000" > uno-forum/.env
