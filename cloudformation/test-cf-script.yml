@@ -105,9 +105,20 @@ Resources:
 
           # Set up environment variables
           cd ~/final_project
-          chmod 705 install-scripts/set-env.sh
+          chmod 777 install-scripts/set-env.sh
           sudo ./install-scripts/set-env.sh
 
+          # Set up and start the backend
+          cd /home/ec2-user/final_project/backend
+          pip3 install -r requirements.txt
+          # source .env
+          # nohup python3 app.py > /home/ec2-user/backend.log 2>&1 &
+
+          # Set up and start the frontend
+          cd /home/ec2-user/final_project/uno-forum
+          npm install
+          # source .env
+          # nohup npm start > /home/ec2-user/frontend.log 2>&1 &
 
 Outputs:
   EC2InstancePublicDNS:
