@@ -7,21 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
-
-frontend_origin = os.getenv("AWS_URL", "*")
-
 # Initialize FastAPI app
 app = FastAPI()
-
-# Enable CORS for all origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[frontend_origin],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Set up DynamoDB
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
@@ -68,6 +55,6 @@ async def get_posts():
 
 if __name__ == "__main__":
     import uvicorn
-    # uvicorn.run(app, host="localhost", port=5000)
+    uvicorn.run(app, host="localhost", port=5000)
     # for EC2
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    # uvicorn.run(app, host="0.0.0.0", port=5000)

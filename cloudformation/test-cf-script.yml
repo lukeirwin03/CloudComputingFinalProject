@@ -106,6 +106,7 @@ Resources:
           # Set up environment variables
           cd ~/final_project
           chmod 777 install-scripts/set-env.sh
+          chmod 777 install-scripts/install_.sh
           sudo ./install-scripts/set-env.sh
 
           # Set up and start the backend
