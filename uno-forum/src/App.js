@@ -10,10 +10,12 @@ const App = () => {
   // Environment variable for API URL
   const apiUrl = process.env.REACT_APP_AWS_URL || 'http://127.0.0.1:5000';
   console.log(apiUrl)
+
+
   // Function to register user
   const registerUser = async () => {
     try {
-      const response = await axios.post(`${apiUrl}/register`, {
+      const response = await axios.post(`/register`, {
         userId: email,
         name,
         email
@@ -24,11 +26,11 @@ const App = () => {
       alert('Failed to register user.');
     }
   };
-
-  // Function to create a new post
+  
+  // Same for the createPost function
   const createPost = async () => {
     try {
-      const response = await axios.post(`${apiUrl}/post`, {
+      const response = await axios.post(`/post`, {
         postId: Date.now().toString(),
         content
       });
@@ -39,11 +41,11 @@ const App = () => {
       alert('Failed to create post.');
     }
   };
-
-  // Function to get all posts
+  
+  // And for the getPosts function
   const getPosts = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/posts`);
+      const response = await axios.get(`/posts`);
       setPosts(response.data);
     } catch (error) {
       console.error('Error fetching posts:', error.response || error);

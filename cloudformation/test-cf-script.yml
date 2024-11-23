@@ -1,14 +1,4 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Parameters:
-  InstanceType:
-    Type: String
-    Default: t2.micro
-  KeyName:
-    Type: 'AWS::EC2::KeyPair::KeyName'
-    Description: Name of an existing EC2 key pair for SSH access
-  ImageId:
-    Type: 'AWS::EC2::Image::Id'
-    Default: ami-0182f373e66f89c85 # Replace with your region's suitable AMI
 
 Resources:
   # DynamoDB Users Table
@@ -41,98 +31,12 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
 
-# IAM Role for EC2 to access DynamoDB
-  MyEC2Role:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Action: 'sts:AssumeRole'
-            Principal:
-              Service: 'ec2.amazonaws.com'
-      Policies:
-        - PolicyName: DynamoDBAccessPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: 'Allow'
-                Action:
-                  - 'dynamodb:PutItem'
-                  - 'dynamodb:GetItem'
-                  - 'dynamodb:Scan'
-                Resource: 
-                  - !GetAtt UsersTable.Arn
-                  - !GetAtt PostsTable.Arn
-
-  # Security Group
-  MySecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Enable SSH and HTTP access
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0  # SSH access from anywhere (adjust as needed)
-        - IpProtocol: tcp
-          FromPort: 3000
-          ToPort: 3000
-          CidrIp: 0.0.0.0/0  # HTTP access for frontend
-        - IpProtocol: tcp
-          FromPort: 5000
-          ToPort: 5000
-          CidrIp: 0.0.0.0/0  # HTTP access for backend
-
-  # EC2 Instance
-  SingleInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: !Ref InstanceType
-      ImageId: !Ref ImageId
-      KeyName: !Ref KeyName
-      SecurityGroupIds:
-        - !Ref MySecurityGroup
-      UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          yum update -y
-          yum install -y python3 git nodejs python-pip
-
-          # Clone the project repository
-          git clone https://github.com/lukeirwin03/CloudComputingFinalProject.git /home/ec2-user/final_project
-
-          # Set up environment variables
-          cd ~/final_project
-          chmod 777 install-scripts/set-env.sh
-          sudo ./install-scripts/set-env.sh
-
-          # Set up and start the backend
-          cd /home/ec2-user/final_project/backend
-          pip3 install -r requirements.txt
-          # source .env
-          # nohup python3 app.py > /home/ec2-user/backend.log 2>&1 &
-
-          # Set up and start the frontend
-          cd /home/ec2-user/final_project/uno-forum
-          npm install
-          # source .env
-          # nohup npm start > /home/ec2-user/frontend.log 2>&1 &
 
 Outputs:
-  EC2InstancePublicDNS:
-    Description: Public DNS of the EC2 instance
-    Value: !GetAtt SingleInstance.PublicDnsName
   UsersTableName:
     Description: DynamoDB Users Table Name
     Value: !Ref UsersTable
   PostsTableName:
     Description: DynamoDB Posts Table Name
     Value: !Ref PostsTable
-  FrontendURL:
-    Description: URL for the frontend application
-    Value: !Sub 'http://${SingleInstance.PublicDnsName}:3000'
-  BackendURL:
-    Description: URL for the backend API
-    Value: !Sub 'http://${SingleInstance.PublicDnsName}:5000'
+
